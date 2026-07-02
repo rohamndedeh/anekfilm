@@ -784,3 +784,6 @@ Scrape home error: TypeError: (page.props.popular || []).map is not a function
  GET /movies/ip-man-kung-fu-legend-2026 200 in 100ms (next.js: 13ms, application-code: 87ms)
  GET /movies/ip-man-kung-fu-legend-2026 200 in 100ms (next.js: 59ms, application-code: 41ms)
  GET /movies/ip-man-kung-fu-legend-2026 200 in 202ms (next.js: 137ms, application-code: 65ms)
+ GET /movies/ip-man-kung-fu-legend-2026 200 in 255ms (next.js: 147ms, application-code: 107ms)
+ GET /movies/ip-man-kung-fu-legend-2026 200 in 626ms (next.js: 46ms, application-code: 581ms)
+ GET /api/lk21/detail?slug=ip-man-kung-fu-legend-2026 200 in 1318ms (next.js: 490ms, application-code: 827ms)
