@@ -14,6 +14,7 @@ function HeaderInner() {
     { href: '/', label: 'Beranda' },
     { href: '/movies', label: 'Film' },
     { href: '/comics', label: 'Komik' },
+    { href: '/buku', label: 'Buku' },
     { href: '/explore', label: 'Jelajahi' },
   ]
 
