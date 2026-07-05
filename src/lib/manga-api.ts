@@ -2,6 +2,19 @@ import type { Manga, MangaChapter, MangaPages, Genre } from './manga-types'
 
 const API = 'https://api-be.komiknesia.my.id/api'
 
+const HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
+  'Accept': 'application/json',
+  'Referer': 'https://id.komiknesia.net/',
+  'Origin': 'https://id.komiknesia.net',
+}
+
+async function apiFetch(path: string): Promise<any> {
+  const resp = await fetch(`${API}${path}`, { headers: HEADERS, next: { revalidate: 60 } })
+  if (!resp.ok) throw new Error(`KomikNesia API error: ${resp.status}`)
+  return resp.json()
+}
+
 function toManga(data: any): Manga {
   return {
     id: data.id,
@@ -48,55 +61,55 @@ function toChapter(data: any): MangaChapter {
 }
 
 export async function searchManga(query: string, limit = 20): Promise<Manga[]> {
-  const resp = await fetch(`${API}/manga?search=${encodeURIComponent(query)}&limit=${limit}`)
-  if (!resp.ok) return []
-  const json = await resp.json()
-  return (json.manga || []).map(toManga)
+  try {
+    const json = await apiFetch(`/manga?search=${encodeURIComponent(query)}&limit=${limit}`)
+    return (json.manga || []).map(toManga)
+  } catch { return [] }
 }
 
 export async function getMangaDetail(id: string): Promise<Manga | null> {
-  const resp = await fetch(`${API}/manga?page=1&limit=1`)
-  if (!resp.ok) return null
-  const json = await resp.json()
-  const manga = (json.manga || []).find((m: any) => String(m.id) === id || m.slug === id)
-  if (!manga) return null
-  return toManga(manga)
+  try {
+    const json = await apiFetch(`/manga?page=1&limit=50`)
+    const manga = (json.manga || []).find((m: any) => String(m.id) === String(id))
+    if (!manga) return null
+    return toManga(manga)
+  } catch { return null }
 }
 
 export async function getMangaChapters(id: string): Promise<MangaChapter[]> {
-  const resp = await fetch(`${API}/manga/${id}/chapters`)
-  if (!resp.ok) return []
-  const json = await resp.json()
-  if (!Array.isArray(json)) return []
-  return json.map(toChapter)
+  try {
+    const json = await apiFetch(`/manga/${id}/chapters`)
+    if (!Array.isArray(json)) return []
+    return json.map(toChapter)
+  } catch { return [] }
 }
 
 export async function getChapterPages(slug: string): Promise<MangaPages | null> {
-  const resp = await fetch(`${API}/chapters/slug/${encodeURIComponent(slug)}`)
-  if (!resp.ok) return null
-  const json = await resp.json()
-  if (!json.status || !json.data) return null
-  return { images: json.data.images || [] }
+  try {
+    const json = await apiFetch(`/chapters/slug/${encodeURIComponent(slug)}`)
+    if (!json.status || !json.data) return null
+    return { images: json.data.images || [] }
+  } catch { return null }
 }
 
 export async function getPopularManga(limit = 20): Promise<Manga[]> {
-  const resp = await fetch(`${API}/manga?page=1&limit=${limit}`)
-  if (!resp.ok) return []
-  const json = await resp.json()
-  return (json.manga || []).map(toManga)
+  try {
+    const json = await apiFetch(`/manga?page=1&limit=${limit}`)
+    return (json.manga || []).map(toManga)
+  } catch { return [] }
 }
 
 export async function getRecentlyUpdated(limit = 20): Promise<Manga[]> {
-  const resp = await fetch(`${API}/manga?page=1&limit=${limit}`)
-  if (!resp.ok) return []
-  const json = await resp.json()
-  return (json.manga || []).map(toManga)
+  try {
+    const json = await apiFetch(`/manga?page=1&limit=${limit}`)
+    return (json.manga || []).map(toManga)
+  } catch { return [] }
 }
 
 export async function getGenres(): Promise<Genre[]> {
-  const resp = await fetch(`${API}/contents/genres`)
-  if (!resp.ok) return []
-  const json = await resp.json()
-  if (!json.status || !json.data) return []
-  return json.data
+  try {
+    const json = await apiFetch(`/contents/genres`)
+    if (!json.status || !json.data) return []
+    return json.data
+  } catch { return [] }
 }
