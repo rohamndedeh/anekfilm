@@ -33,7 +33,7 @@ function toManga(data: any): Manga {
     hot: data.hot || false,
     isProject: data.is_project || false,
     isSafe: data.is_safe || false,
-    rating: data.rating || 0,
+    rating: Number(data.rating) || 0,
     bookmarkCount: data.bookmark_count || 0,
     views: data.views || 0,
     release: data.release || '',
