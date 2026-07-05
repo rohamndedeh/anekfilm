@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useParams, notFound } from 'next/navigation'
 import type { Lk21MovieDetail, Lk21Movie } from '@/lib/lk21-types'
 import FavoriteButton from '@/components/FavoriteButton'
+import WatchHistoryTracker from '@/components/WatchHistoryTracker'
 
 export default function MovieDetailPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -59,6 +60,15 @@ export default function MovieDetailPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
+      <WatchHistoryTracker
+        id={`movie-${slug}`}
+        title={data.title}
+        poster={data.poster}
+        type="movie"
+        slug={slug}
+        url={`/movies/${slug}`}
+      />
+
       <Link
         href="/movies"
         className="inline-flex items-center gap-1.5 text-sm text-zinc-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 mb-6 transition-colors"

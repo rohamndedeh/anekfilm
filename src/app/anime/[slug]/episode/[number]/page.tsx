@@ -1,6 +1,7 @@
 import { scrapeEpisodeDetail } from '@/lib/scraper'
 import { scrapeAnimeDetail } from '@/lib/scraper'
 import VideoPlayer from '@/components/VideoPlayer'
+import WatchHistoryTracker from '@/components/WatchHistoryTracker'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
@@ -51,6 +52,16 @@ export default async function EpisodePage({
       <h1 className="text-xl md:text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-6">
         {anime?.title || episode.animeTitle} - Episode {episodeNumber}
       </h1>
+
+      <WatchHistoryTracker
+        id={`anime-${slug}-ep-${episodeNumber}`}
+        title={`${anime?.title || episode.animeTitle} - Episode ${episodeNumber}`}
+        poster={anime?.poster || ''}
+        type="anime"
+        slug={slug}
+        url={`/anime/${slug}/episode/${episodeNumber}`}
+        episode={episodeNumber}
+      />
 
       <VideoPlayer embedUrl={episode.embedUrl} title={episode.title} />
 

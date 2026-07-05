@@ -4,6 +4,8 @@ import { useState, useCallback, useEffect } from 'react'
 import SearchBar from '@/components/SearchBar'
 import GenreFilter from '@/components/GenreFilter'
 import AnimeCard from '@/components/AnimeCard'
+import ContinueWatchingCard from '@/components/ContinueWatchingCard'
+import { useWatchHistory } from '@/lib/watch-history-context'
 import type { SearchResult, HomepageData, LatestUpdate } from '@/lib/types'
 import Link from 'next/link'
 
@@ -16,6 +18,8 @@ export default function Home() {
   const [allGenres, setAllGenres] = useState<string[]>([])
   const [homeData, setHomeData] = useState<HomepageData | null>(null)
   const [homeLoading, setHomeLoading] = useState(true)
+  const { recentItems } = useWatchHistory()
+  const continueWatching = recentItems(8)
 
   useEffect(() => {
     async function loadHome() {
@@ -129,6 +133,18 @@ export default function Home() {
             </div>
           ) : homeData ? (
             <div className="space-y-10">
+              {/* Continue Watching */}
+              {continueWatching.length > 0 && (
+                <div>
+                  <SectionHeader title="Lanjutkan Menonton" />
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                    {continueWatching.map((item) => (
+                      <ContinueWatchingCard key={item.id} item={item} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Featured */}
               {homeData.featured.length > 0 && (
                 <div>
