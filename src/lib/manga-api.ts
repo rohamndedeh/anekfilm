@@ -40,7 +40,7 @@ function toManga(data: any): Manga {
     status: data.status || '',
     categoryName: data.category_name || '',
     votes: data.votes || 0,
-    genres: data.genres || [],
+    genres: (data.genres || []).map((g: any) => typeof g === 'string' ? g : g.name || ''),
     lastChapter: data.last_chapter || null,
   }
 }
