@@ -13,6 +13,7 @@ function HeaderInner() {
   const navLinks = [
     { href: '/', label: 'Beranda' },
     { href: '/movies', label: 'Film' },
+    { href: '/comics', label: 'Komik' },
     { href: '/explore', label: 'Jelajahi' },
   ]
 

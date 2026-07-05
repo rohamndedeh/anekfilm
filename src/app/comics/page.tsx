@@ -1,0 +1,173 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
+import type { MangaSearchResult } from '@/lib/manga-types'
+
+const GENRES = [
+  'Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror',
+  'Mystery', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports', 'Supernatural',
+  'Thriller', 'Historical', 'Comedy',
+]
+
+export default function ComicsPage() {
+  const [comics, setComics] = useState<MangaSearchResult[]>([])
+  const [loading, setLoading] = useState(true)
+  const [query, setQuery] = useState('')
+  const [searchMode, setSearchMode] = useState(false)
+  const [selectedGenre, setSelectedGenre] = useState('')
+
+  useEffect(() => {
+    loadHome()
+  }, [])
+
+  const loadHome = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/manga/home')
+      if (res.ok) {
+        const data = await res.json()
+        setComics(data.popular || [])
+      }
+    } catch {} finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSearch = useCallback(async (q: string) => {
+    if (!q.trim()) {
+      setSearchMode(false)
+      loadHome()
+      return
+    }
+    setSearchMode(true)
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/manga/search?q=${encodeURIComponent(q.trim())}`)
+      if (res.ok) setComics(await res.json())
+    } catch {} finally { setLoading(false) }
+  }, [])
+
+  const handleGenre = useCallback(async (genre: string) => {
+    setSelectedGenre(genre)
+    setSearchMode(false)
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/manga/search?q=${encodeURIComponent(genre)}`)
+      if (res.ok) setComics(await res.json())
+    } catch {} finally { setLoading(false) }
+  }, [])
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold mb-2 text-zinc-900 dark:text-zinc-100">
+          Komik
+        </h1>
+        <p className="text-zinc-500 dark:text-zinc-400 mb-5">
+          Baca manga, manhwa, dan komik online
+        </p>
+
+        {/* Search */}
+        <div className="max-w-xl mx-auto relative">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch(query)}
+            placeholder="Cari komik..."
+            className="w-full px-5 py-3 pl-12 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          />
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400">
+            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Genre chips */}
+      <div className="flex flex-wrap gap-2 mb-6 justify-center">
+        {GENRES.map((g) => (
+          <button
+            key={g}
+            onClick={() => handleGenre(g)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              selectedGenre === g
+                ? 'bg-blue-600 text-white'
+                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700'
+            }`}
+          >
+            {g}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : comics.length === 0 ? (
+        <div className="text-center py-20 text-zinc-400">
+          <p>Tidak ada komik ditemukan</p>
+        </div>
+      ) : (
+        <>
+          <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 mb-4 flex items-center gap-2">
+            <span className="w-1 h-6 bg-blue-600 rounded-full inline-block" />
+            {searchMode ? `Hasil: "${query}"` : selectedGenre ? selectedGenre : 'Komik Populer'}
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {comics.map((comic) => (
+              <MangaCard key={comic.id} comic={comic} />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function MangaCard({ comic }: { comic: MangaSearchResult }) {
+  return (
+    <Link
+      href={`/comics/${comic.id}`}
+      className="group bg-white dark:bg-zinc-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-zinc-100 dark:border-zinc-700 hover:-translate-y-1"
+    >
+      <div className="aspect-[3/4] relative overflow-hidden bg-zinc-100 dark:bg-zinc-700">
+        {comic.coverUrl ? (
+          <img
+            src={comic.coverUrl}
+            alt={comic.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-zinc-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+            </svg>
+          </div>
+        )}
+        <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-emerald-600 text-white">
+          Manga
+        </span>
+      </div>
+      <div className="p-3">
+        <h3 className="font-semibold text-sm text-zinc-900 dark:text-zinc-100 line-clamp-2 leading-snug">
+          {comic.title}
+        </h3>
+        {comic.author && (
+          <p className="text-[11px] text-zinc-400 mt-1 truncate">{comic.author}</p>
+        )}
+        {comic.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-1.5">
+            {comic.tags.slice(0, 2).map((t) => (
+              <span key={t} className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-zinc-100 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400">
+                {t}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </Link>
+  )
+}
