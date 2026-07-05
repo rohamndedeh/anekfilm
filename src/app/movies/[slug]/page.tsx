@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams, notFound } from 'next/navigation'
 import type { Lk21MovieDetail, Lk21Movie } from '@/lib/lk21-types'
+import FavoriteButton from '@/components/FavoriteButton'
 
 export default function MovieDetailPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -134,22 +135,32 @@ export default function MovieDetailPage() {
             </div>
           )}
 
-          {/* Download */}
-          {data.downloadUrl && (
-            <a
-              href={data.downloadUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" x2="12" y1="15" y2="3" />
-              </svg>
-              Download
-            </a>
-          )}
+          {/* Download & Favorite */}
+          <div className="flex flex-wrap gap-2 mt-4">
+            {data.downloadUrl && (
+              <a
+                href={data.downloadUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" x2="12" y1="15" y2="3" />
+                </svg>
+                Download
+              </a>
+            )}
+            <FavoriteButton
+              id={`movie-${slug}`}
+              title={data.title}
+              poster={data.poster}
+              type="movie"
+              slug={slug}
+              url={`/movies/${slug}`}
+            />
+          </div>
         </div>
       </div>
 

@@ -1,5 +1,6 @@
 import { scrapeAnimeDetail } from '@/lib/scraper'
 import EpisodeList from '@/components/EpisodeList'
+import FavoriteButton from '@/components/FavoriteButton'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
@@ -42,6 +43,16 @@ export default async function AnimeDetailPage({
           <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-zinc-100 mb-4">
             {detail.title}
           </h1>
+
+          <FavoriteButton
+            id={`anime-${slug}`}
+            title={detail.title}
+            poster={detail.poster}
+            type="anime"
+            slug={slug}
+            url={`/anime/${slug}`}
+            className="mb-4"
+          />
 
           <div className="flex flex-wrap gap-2 mb-4">
             {detail.type && (
