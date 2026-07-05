@@ -4,10 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
 interface MangaPage {
-  baseUrl: string
-  chapterHash: string
   images: string[]
-  dataSaver: string[]
 }
 
 export default function ChapterReaderPage({
@@ -18,7 +15,6 @@ export default function ChapterReaderPage({
   const [resolved, setResolved] = useState<{ id: string; chapterId: string } | null>(null)
   const [pages, setPages] = useState<MangaPage | null>(null)
   const [loading, setLoading] = useState(true)
-  const [useDataSaver, setUseDataSaver] = useState(false)
 
   useEffect(() => {
     params.then((p) => {
@@ -27,10 +23,10 @@ export default function ChapterReaderPage({
     })
   }, [params])
 
-  const loadPages = async (chapterId: string) => {
+  const loadPages = async (slug: string) => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/manga/pages?id=${chapterId}`)
+      const res = await fetch(`/api/manga/pages?slug=${encodeURIComponent(slug)}`)
       if (res.ok) setPages(await res.json())
     } catch {} finally { setLoading(false) }
   }
@@ -54,8 +50,6 @@ export default function ChapterReaderPage({
     )
   }
 
-  const imageList = useDataSaver ? pages.dataSaver : pages.images
-
   return (
     <div className="max-w-3xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6 gap-4">
@@ -68,30 +62,21 @@ export default function ChapterReaderPage({
           </svg>
           Daftar Chapter
         </Link>
-
-        <button
-          onClick={() => setUseDataSaver(!useDataSaver)}
-          className="px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors border border-zinc-200 dark:border-zinc-700"
-        >
-          {useDataSaver ? 'HD' : 'Hemat Data'}
-        </button>
+        <span className="text-xs text-zinc-400">
+          {pages.images.length} halaman
+        </span>
       </div>
 
       <div className="flex flex-col items-center gap-0">
-        {imageList.map((img, i) => {
-          const url = useDataSaver
-            ? `${pages.baseUrl}/data-saver/${pages.chapterHash}/${img}`
-            : `${pages.baseUrl}/data/${pages.chapterHash}/${img}`
-          return (
-            <img
-              key={i}
-              src={url}
-              alt={`Page ${i + 1}`}
-              loading={i < 3 ? 'eager' : 'lazy'}
-              className="w-full h-auto"
-            />
-          )
-        })}
+        {pages.images.map((img, i) => (
+          <img
+            key={i}
+            src={img}
+            alt={`Page ${i + 1}`}
+            loading={i < 3 ? 'eager' : 'lazy'}
+            className="w-full h-auto"
+          />
+        ))}
       </div>
 
       <div className="flex justify-center mt-8 mb-12">

@@ -2,23 +2,19 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import type { MangaSearchResult } from '@/lib/manga-types'
-
-const GENRES = [
-  'Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror',
-  'Mystery', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports', 'Supernatural',
-  'Thriller', 'Historical', 'Comedy',
-]
+import type { Manga, Genre } from '@/lib/manga-types'
 
 export default function ComicsPage() {
-  const [comics, setComics] = useState<MangaSearchResult[]>([])
+  const [comics, setComics] = useState<Manga[]>([])
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
   const [searchMode, setSearchMode] = useState(false)
   const [selectedGenre, setSelectedGenre] = useState('')
+  const [genres, setGenres] = useState<Genre[]>([])
 
   useEffect(() => {
     loadHome()
+    loadGenres()
   }, [])
 
   const loadHome = async () => {
@@ -32,6 +28,13 @@ export default function ComicsPage() {
     } catch {} finally {
       setLoading(false)
     }
+  }
+
+  const loadGenres = async () => {
+    try {
+      const res = await fetch('/api/manga/genres')
+      if (res.ok) setGenres(await res.json())
+    } catch {}
   }
 
   const handleSearch = useCallback(async (q: string) => {
@@ -68,7 +71,6 @@ export default function ComicsPage() {
           Baca manga, manhwa, dan komik online
         </p>
 
-        {/* Search */}
         <div className="max-w-xl mx-auto relative">
           <input
             type="text"
@@ -84,19 +86,18 @@ export default function ComicsPage() {
         </div>
       </div>
 
-      {/* Genre chips */}
       <div className="flex flex-wrap gap-2 mb-6 justify-center">
-        {GENRES.map((g) => (
+        {genres.map((g) => (
           <button
-            key={g}
-            onClick={() => handleGenre(g)}
+            key={g.id}
+            onClick={() => handleGenre(g.name)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              selectedGenre === g
+              selectedGenre === g.name
                 ? 'bg-blue-600 text-white'
                 : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700'
             }`}
           >
-            {g}
+            {g.name}
           </button>
         ))}
       </div>
@@ -113,7 +114,7 @@ export default function ComicsPage() {
         <>
           <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 mb-4 flex items-center gap-2">
             <span className="w-1 h-6 bg-blue-600 rounded-full inline-block" />
-            {searchMode ? `Hasil: "${query}"` : selectedGenre ? selectedGenre : 'Komik Populer'}
+            {searchMode ? `Hasil: "${query}"` : selectedGenre ? selectedGenre : 'Komik Terbaru'}
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {comics.map((comic) => (
@@ -126,16 +127,16 @@ export default function ComicsPage() {
   )
 }
 
-function MangaCard({ comic }: { comic: MangaSearchResult }) {
+function MangaCard({ comic }: { comic: Manga }) {
   return (
     <Link
       href={`/comics/${comic.id}`}
       className="group bg-white dark:bg-zinc-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-zinc-100 dark:border-zinc-700 hover:-translate-y-1"
     >
       <div className="aspect-[3/4] relative overflow-hidden bg-zinc-100 dark:bg-zinc-700">
-        {comic.coverUrl ? (
+        {comic.thumbnail ? (
           <img
-            src={comic.coverUrl}
+            src={comic.thumbnail}
             alt={comic.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
@@ -147,9 +148,14 @@ function MangaCard({ comic }: { comic: MangaSearchResult }) {
             </svg>
           </div>
         )}
-        <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-emerald-600 text-white">
-          Manga
-        </span>
+        {comic.rating > 0 && (
+          <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-bold bg-yellow-500 text-white flex items-center gap-0.5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            {comic.rating.toFixed(1)}
+          </span>
+        )}
       </div>
       <div className="p-3">
         <h3 className="font-semibold text-sm text-zinc-900 dark:text-zinc-100 line-clamp-2 leading-snug">
@@ -158,11 +164,11 @@ function MangaCard({ comic }: { comic: MangaSearchResult }) {
         {comic.author && (
           <p className="text-[11px] text-zinc-400 mt-1 truncate">{comic.author}</p>
         )}
-        {comic.tags.length > 0 && (
+        {comic.genres.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-1.5">
-            {comic.tags.slice(0, 2).map((t) => (
-              <span key={t} className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-zinc-100 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400">
-                {t}
+            {comic.genres.slice(0, 2).map((g) => (
+              <span key={g} className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-zinc-100 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400">
+                {g}
               </span>
             ))}
           </div>

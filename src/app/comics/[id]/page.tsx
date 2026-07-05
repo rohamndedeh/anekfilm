@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import type { MangaSearchResult, MangaChapter } from '@/lib/manga-types'
+import type { Manga, MangaChapter } from '@/lib/manga-types'
 
 export default function ComicDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const [id, setId] = useState('')
-  const [comic, setComic] = useState<MangaSearchResult | null>(null)
+  const [comic, setComic] = useState<Manga | null>(null)
   const [chapters, setChapters] = useState<MangaChapter[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -20,13 +20,10 @@ export default function ComicDetailPage({ params }: { params: Promise<{ id: stri
   const loadComic = async (comicId: string) => {
     setLoading(true)
     try {
-      const [detailRes, chaptersRes] = await Promise.all([
-        fetch(`/api/manga/detail?id=${comicId}`),
-        fetch(`/api/manga/chapters?id=${comicId}&limit=100`),
-      ])
-      if (detailRes.ok) setComic(await detailRes.json())
-      if (chaptersRes.ok) {
-        const data = await chaptersRes.json()
+      const res = await fetch(`/api/manga/detail?id=${comicId}`)
+      if (res.ok) {
+        const data = await res.json()
+        setComic(data)
         setChapters(data.chapters || [])
       }
     } catch {} finally { setLoading(false) }
@@ -67,8 +64,8 @@ export default function ComicDetailPage({ params }: { params: Promise<{ id: stri
       <div className="flex flex-col md:flex-row gap-8 mb-10">
         <div className="shrink-0 w-full md:w-56">
           <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 shadow-lg">
-            {comic.coverUrl ? (
-              <img src={comic.coverUrl} alt={comic.title} className="w-full h-full object-cover" />
+            {comic.thumbnail ? (
+              <img src={comic.thumbnail} alt={comic.title} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-zinc-400">
                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -88,9 +85,9 @@ export default function ComicDetailPage({ params }: { params: Promise<{ id: stri
                 {comic.status}
               </span>
             )}
-            {comic.year && (
+            {comic.release && (
               <span className="px-3 py-1 rounded-lg text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-                {comic.year}
+                {comic.release}
               </span>
             )}
             {comic.author && (
@@ -98,26 +95,33 @@ export default function ComicDetailPage({ params }: { params: Promise<{ id: stri
                 {comic.author}
               </span>
             )}
+            {comic.rating > 0 && (
+              <span className="px-3 py-1 rounded-lg text-xs font-semibold bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300 flex items-center gap-0.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                {comic.rating.toFixed(1)}
+              </span>
+            )}
           </div>
 
-          {comic.tags.length > 0 && (
+          {comic.genres.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-4">
-              {comic.tags.map((g) => (
+              {comic.genres.map((g) => (
                 <span key={g} className="px-2.5 py-1 rounded-lg text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">{g}</span>
               ))}
             </div>
           )}
 
-          {comic.description && (
+          {comic.synopsis && (
             <div>
               <h2 className="text-sm font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2">Sinopsis</h2>
-              <p className="text-zinc-700 dark:text-zinc-300 leading-relaxed text-sm">{comic.description}</p>
+              <p className="text-zinc-700 dark:text-zinc-300 leading-relaxed text-sm">{comic.synopsis}</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Chapters */}
       <div>
         <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 mb-4 flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -133,7 +137,7 @@ export default function ComicDetailPage({ params }: { params: Promise<{ id: stri
             {chapters.map((ch) => (
               <Link
                 key={ch.id}
-                href={`/comics/${id}/chapter/${ch.id}`}
+                href={`/comics/${id}/chapter/${ch.slug}`}
                 className="flex items-center gap-3 p-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors group"
               >
                 <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
@@ -143,14 +147,13 @@ export default function ComicDetailPage({ params }: { params: Promise<{ id: stri
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="font-medium text-sm text-zinc-900 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                    {ch.volume ? `Vol. ${ch.volume} ` : ''}
-                    {ch.chapter ? `Chapter ${ch.chapter}` : 'Oneshot'}
+                    Chapter {ch.chapterNumber}
                     {ch.title ? ` - ${ch.title}` : ''}
                   </h3>
                   <p className="text-[11px] text-zinc-400 mt-0.5">
-                    {ch.scanlationGroup && `${ch.scanlationGroup} · `}
-                    {new Date(ch.publishAt).toLocaleDateString('id-ID')}
-                    {ch.pages > 0 && ` · ${ch.pages} halaman`}
+                    {ch.imageCount} gambar
+                    {ch.views > 0 && ` · ${ch.views} views`}
+                    {ch.createdAt && ` · ${new Date(ch.createdAt).toLocaleDateString('id-ID')}`}
                   </p>
                 </div>
               </Link>
